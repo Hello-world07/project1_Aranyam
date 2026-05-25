@@ -1,37 +1,59 @@
-import Navbar from './components/Navbar';
-import About from './components/About';
-import Menu from './components/Menu';
-import Gallery from './components/Gallery';   // ← New Import
-import Contact from './components/Contact';
+import { useState } from 'react';
+
+import Navbar from './components/navbar';
+import About from './components/about';
+import Menu from './components/menu';
+import Gallery from './components/gallery';
+import Contact from './components/contact';
+import BookingModal from './components/bookingmodal';
 
 function App() {
+  const [bookingOpen, setBookingOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-jungle-950 scroll-smooth">
-      <Navbar />
 
-      {/* ─── Hero Section ─── */}
+      {/* Navbar */}
+      <Navbar onBookTable={() => setBookingOpen(true)} />
+
+      {/* Hero Section */}
       <section
         id="home"
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
       >
+
+        {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/hero.jpg')" }}
         />
+
+        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/55" />
+
+        {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-jungle-950/60 via-transparent to-jungle-950/80" />
+
+        {/* Radial Glow */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(46,158,46,0.1),transparent)]" />
 
+        {/* Hero Content */}
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto animate-fade-in-down">
+
           <p className="font-cormorant italic text-gold-400/70 text-lg tracking-[0.3em] uppercase mb-4">
             Welcome to
           </p>
+
           <h1
             className="font-cinzel text-6xl sm:text-7xl md:text-8xl font-bold text-gold-400 mb-4"
-            style={{ textShadow: '0 0 40px rgba(212,160,23,0.4), 0 0 80px rgba(212,160,23,0.15)' }}
+            style={{
+              textShadow:
+                '0 0 40px rgba(212,160,23,0.4), 0 0 80px rgba(212,160,23,0.15)',
+            }}
           >
             ARANYAM
           </h1>
+
           <p className="font-cormorant text-jungle-200/70 text-xl sm:text-2xl tracking-[0.2em] uppercase mb-2">
             The Jungle Theme Restaurant
           </p>
@@ -43,11 +65,14 @@ function App() {
           </div>
 
           <p className="font-cormorant text-jungle-100/85 text-xl sm:text-2xl max-w-2xl mx-auto leading-loose tracking-wide mb-10">
-            At Aranyam, every meal is a journey into the wild. Surrounded by trees, waterfalls, and cave-style seating, we serve handpicked dishes that celebrate both tradition and taste.
+            At Aranyam, every meal is a journey into the wild.
+            Surrounded by trees, waterfalls, and cave-style seating,
+            we serve handpicked dishes that celebrate both tradition and taste.
           </p>
 
-          <a
-            href="#contact"
+          {/* Hero CTA */}
+          <button
+            onClick={() => setBookingOpen(true)}
             className="inline-flex items-center gap-2 relative overflow-hidden
               px-8 py-4 rounded-full font-cinzel text-sm tracking-[0.2em] uppercase
               text-jungle-950 font-bold
@@ -59,29 +84,41 @@ function App() {
             <span
               className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               style={{
-                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%)',
+                background:
+                  'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%)',
                 backgroundSize: '200% 100%',
                 animation: 'shimmer 1.5s linear infinite',
               }}
             />
-            <span className="relative z-10">Book a Table</span>
-          </a>
+
+            <span className="relative z-10">
+              Book a Table
+            </span>
+          </button>
         </div>
 
+        {/* Bottom Fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-jungle-950 to-transparent" />
       </section>
 
-      {/* ─── About ─── */}
+      {/* About */}
       <About />
 
-      {/* ─── Menu ─── */}
-      <Menu />
+      {/* Menu */}
+      <Menu onBookTable={() => setBookingOpen(true)} />
 
-      {/* ─── Gallery ─── */}
+      {/* Gallery */}
       <Gallery />
 
-      {/* ─── Contact ─── */}
+      {/* Contact */}
       <Contact />
+
+      {/* Booking Modal */}
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+      />
+
     </div>
   );
 }
