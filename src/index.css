@@ -1,0 +1,51 @@
+/* ─── Google Fonts import ─── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background-color: #041504;
+    color: #e8f5e8;
+  }
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer utilities {
+  /* Shimmer animation used on CTA button */
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+
+  /* Custom scrollbar — jungle themed */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #041504;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #d4a017, #1e7e1e);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #f9c74f, #2e9e2e);
+  }
+
+  /* Focus visible ring — gold */
+  :focus-visible {
+    outline: 2px solid rgba(212, 160, 23, 0.7);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
