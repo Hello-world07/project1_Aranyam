@@ -2,14 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-import Navbar from './components/navbar';
-import About from './components/about';
-import Menu from './components/menu';
-import Gallery from './components/gallery';
-import Contact from './components/contact';
-import BookingModal from './components/bookingmodal';
-import FloatingActionButtons from './components/FloatingActionButtons';
+import { Routes, Route } from 'react-router-dom';
 
+import Navbar from './components/navbar';
+import BookingModal from './components/bookingmodal';
+import FloatingActionButtons from './components/floatingActionbuttons';
+
+import Home from './pages/home';
+import AboutPage from './pages/aboutpage.jsx';
+import MenuPage from './pages/menupage.jsx';
+import GalleryPage from './pages/gallerypage.jsx';
+import ContactPage from './pages/contactpage.jsx';
+import Footer from './components/footer.jsx'; 
 /* ─────────────────────────────────────────────
    SCROLL-REVEAL HOOK
 ───────────────────────────────────────────── */
@@ -230,7 +234,7 @@ function HeroSection({ onBookTable }) {
             />
 
             <span className="relative z-10">
-              Book a Table
+              Reserve Your Experience
             </span>
           </button>
 
@@ -416,28 +420,41 @@ function App() {
         {/* Navbar */}
         <Navbar onBookTable={openBooking} />
 
-        {/* Hero */}
-        <HeroSection onBookTable={openBooking} />
+        <Routes>
+  <Route
+    path="/"
+    element={
+      <Home
+        onBookTable={openBooking}
+        HeroSection={HeroSection}
+      />
+    }
+  />
 
-        <SectionDivider />
+  <Route
+    path="/about"
+    element={<AboutPage />}
+  />
 
-        {/* About */}
-        <About />
+  <Route
+    path="/menu"
+    element={
+      <MenuPage
+        onBookTable={openBooking}
+      />
+    }
+  />
 
-        <SectionDivider />
+  <Route
+    path="/gallery"
+    element={<GalleryPage />}
+  />
 
-        {/* Menu */}
-        <Menu onBookTable={openBooking} />
-
-        <SectionDivider />
-
-        {/* Gallery */}
-        <Gallery />
-
-        <SectionDivider />
-
-        {/* Contact */}
-        <Contact />
+  <Route
+    path="/contact"
+    element={<ContactPage />}
+  />
+</Routes>
 
         {/* Booking Modal */}
         <BookingModal
@@ -447,7 +464,9 @@ function App() {
 
         {/* Floating Action Buttons */}
         <FloatingActionButtons />
-
+       
+{/* Footer */}
+<Footer />
       </div>
     </>
   );

@@ -5,41 +5,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   BASE LAYER
+======================================== */
+
 @layer base {
   html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    /* REMOVE SCROLLBAR */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+
   body {
     background-color: #041504;
     color: #e8f5e8;
+    overflow-x: hidden;
   }
+
   * {
     box-sizing: border-box;
+
+    /* REMOVE SCROLLBAR */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* CHROME / SAFARI / EDGE */
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }
 
+/* ========================================
+   UTILITIES
+======================================== */
+
 @layer utilities {
+
   /* Shimmer animation used on CTA button */
   @keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position:  200% center; }
-  }
+    0% {
+      background-position: -200% center;
+    }
 
-  /* Custom scrollbar — jungle themed */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #041504;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: linear-gradient(to bottom, #d4a017, #1e7e1e);
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(to bottom, #f9c74f, #2e9e2e);
+    100% {
+      background-position: 200% center;
+    }
   }
 
   /* Focus visible ring — gold */
@@ -48,4 +65,36 @@
     outline-offset: 3px;
     border-radius: 4px;
   }
+
+  /* OPTIONAL */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ========================================
+   MEDIA OPTIMIZATION
+======================================== */
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* ========================================
+   TEXT SELECTION
+======================================== */
+
+::selection {
+  background: rgba(212, 160, 23, 0.25);
+  color: white;
 }

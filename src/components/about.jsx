@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { MapPin } from 'lucide-react';
 
 export default function About() {
@@ -33,33 +34,66 @@ export default function About() {
     },
   ];
 
+  const [activeFounder, setActiveFounder] = useState(0);
+  const sliderRef = useRef(null);
+
+  const handleScroll = () => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const center = slider.scrollLeft + slider.clientWidth / 2;
+
+    let closest = 0;
+    let minDist = Infinity;
+
+    Array.from(slider.children).forEach((card, i) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const dist = Math.abs(cardCenter - center);
+
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    });
+
+    setActiveFounder(closest);
+  };
+
+  const scrollToCard = (index) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const card = Array.from(slider.children)[index];
+    if (!card) return;
+
+    slider.scrollTo({
+      left:
+        card.offsetLeft -
+        (slider.clientWidth - card.offsetWidth) / 2,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <section
       id="about"
       className="
         relative
         overflow-hidden
-        bg-jungle-950
+        bg-[#050505]
         py-20
         sm:py-24
         lg:py-28
       "
     >
-      {/* ───────────────── PREMIUM MENU-LIKE BACKGROUND ───────────────── */}
+      {/* Main Background */}
+      <div className="absolute inset-0 bg-[#050505]" />
 
-      {/* Main Jungle Base */}
-      <div className="absolute inset-0 bg-jungle-950" />
+      {/* Gold Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_45%)]" />
 
-      {/* Top Ambient Green Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(46,158,46,0.07),transparent)]" />
-
-      {/* Bottom Gold Ambient Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_100%_80%,rgba(212,160,23,0.05),transparent)]" />
-
-      {/* Extra Cinematic Depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
-
-      {/* ───────────────── CONTENT ───────────────── */}
+      {/* Jungle Texture Overlay */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
@@ -103,7 +137,6 @@ export default function About() {
                 shadow-[0_10px_40px_rgba(0,0,0,0.55)]
               "
             >
-              {/* Exact Ratio */}
               <div className="aspect-[3/2] w-full">
 
                 <img
@@ -124,10 +157,8 @@ export default function About() {
                 />
               </div>
 
-              {/* Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-              {/* Mobile Branding */}
               <div className="absolute bottom-0 left-0 right-0 px-4 py-4 lg:hidden">
                 <p className="text-center font-cinzel text-xs uppercase tracking-[0.2em] text-gold-400">
                   అరణ్యం — Aranyam
@@ -148,7 +179,6 @@ export default function About() {
                 border-t-2
                 border-gold-500/50
               "
-              aria-hidden="true"
             />
 
             <div
@@ -163,11 +193,10 @@ export default function About() {
                 border-r-2
                 border-gold-500/50
               "
-              aria-hidden="true"
             />
           </div>
 
-          {/* Text Content */}
+          {/* Text */}
           <div className="flex flex-col gap-6">
 
             <div
@@ -180,7 +209,6 @@ export default function About() {
                 sm:text-7xl
                 lg:text-8xl
               "
-              aria-hidden="true"
             >
               "
             </div>
@@ -251,7 +279,6 @@ export default function About() {
                       duration-500
                       group-hover:scale-x-100
                     "
-                    aria-hidden="true"
                   />
 
                   <MapPin
@@ -265,7 +292,6 @@ export default function About() {
                       duration-300
                       group-hover:scale-110
                     "
-                    aria-hidden="true"
                   />
 
                   <p className="font-cinzel text-xs font-semibold uppercase tracking-[0.15em] text-gold-400">
@@ -319,7 +345,6 @@ export default function About() {
                   duration-500
                   group-hover:scale-x-100
                 "
-                aria-hidden="true"
               />
 
               <p
@@ -349,7 +374,6 @@ export default function About() {
         {/* Team */}
         <div>
 
-          {/* Team Heading */}
           <div className="mb-14 text-center">
 
             <p className="mb-3 font-cormorant text-base italic uppercase tracking-[0.3em] text-gold-400/60">
@@ -373,12 +397,28 @@ export default function About() {
           </div>
 
           {/* Founder Cards */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-
+          <div
+            ref={sliderRef}
+            onScroll={handleScroll}
+            className="
+              flex gap-5 overflow-x-auto scroll-smooth
+              snap-x snap-mandatory
+              pb-2 -mx-4 px-4
+              [scrollbar-width:none]
+              [&::-webkit-scrollbar]:hidden
+              sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-6
+              sm:overflow-visible sm:px-0 sm:pb-0 sm:snap-none
+              lg:grid-cols-4
+            "
+          >
             {founders.map((founder) => (
               <article
                 key={founder.name}
                 className="
+                  flex-shrink-0
+                  w-[78vw]
+                  snap-center
+                  sm:w-auto
                   group
                   relative
                   overflow-hidden
@@ -438,19 +478,38 @@ export default function About() {
                       duration-500
                       group-hover:scale-x-100
                     "
-                    aria-hidden="true"
                   />
                 </div>
               </article>
             ))}
           </div>
 
+          {/* Mobile Dots */}
+          <div className="mt-5 flex items-center justify-center gap-2 sm:hidden">
+
+            {founders.map((founder, i) => (
+              <button
+                key={founder.name}
+                onClick={() => scrollToCard(i)}
+                className={`
+                  h-1.5 rounded-full transition-all duration-300
+                  ${
+                    i === activeFounder
+                      ? 'w-6 bg-gold-500'
+                      : 'w-1.5 bg-gold-500/30 hover:bg-gold-500/60'
+                  }
+                `}
+              />
+            ))}
+          </div>
+
           {/* Quote */}
           <div className="mt-16 text-center">
             <p className="font-cormorant text-xl italic tracking-wide text-gold-400 sm:text-2xl">
-              “Every experience at Aranyam begins with passion and ends with memories.”
+              "Every experience at Aranyam begins with passion and ends with memories."
             </p>
           </div>
+
         </div>
       </div>
     </section>

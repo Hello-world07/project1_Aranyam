@@ -1,283 +1,333 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, X } from 'lucide-react';
+import React, {
+  useState,
+  useRef,
+  useMemo,
+  useEffect,
+} from 'react';
 
-// ==================== MENU DATA ====================
-const categories = [
-  { id: 'all', label: 'All' },
-  { id: 'starters', label: 'Starters' },
-  { id: 'biryani', label: 'Biryani & Rice' },
-  { id: 'maincourse', label: 'Main Course' },
-  { id: 'breads', label: 'Breads' },
-  { id: 'desserts', label: 'Desserts' },
-  { id: 'beverages', label: 'Beverages' },
+import {
+  Search,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+
+// ======================================================
+// CONFIGURATION DATA MATRICES (28 Premium Curated Items)
+// ======================================================
+const CATEGORIES = [
+  { id: 'all', label: 'All', icon: '✨' },
+  { id: 'starters', label: 'Starters', icon: '🔥' },
+  { id: 'biryani', label: 'Biryani', icon: '🍚' },
+  { id: 'maincourse', label: 'Curries', icon: '🍛' },
+  { id: 'breads', label: 'Breads', icon: '🫓' },
+  { id: 'desserts', label: 'Desserts', icon: '🍮' },
+  { id: 'beverages', label: 'Drinks', icon: '🥤' },
 ];
 
-const vegFilters = [
-  { id: 'all', label: 'All', dot: null },
-  { id: 'veg', label: 'Veg', dot: 'green' },
-  { id: 'nonveg', label: 'Non-Veg', dot: 'red' },
+const DISHES = [
+  // --- STARTERS ---
+  { id: 1, category: 'starters', veg: false, name: 'Chicken 65', desc: 'Crispy deep-fried chicken marinated in custom hand-ground southern spices', price: 355, image: '/chicken65.jpg' },
+  { id: 2, category: 'starters', veg: false, name: 'Dragon Chicken', desc: 'Crispy premium chicken strips tossed in spicy, tangy signature oriental dragon sauce', price: 355, image: '/Dragon Chicken.png' },
+  { id: 3, category: 'starters', veg: true, name: 'Paneer Tikka', desc: 'Soft organic paneer cubes slow-grilled to perfection in a traditional clay tandoor oven', price: 348, image: '/Paneer Tikka.jpg' },
+  { id: 10, category: 'starters', veg: false, name: 'Apollo Fish', desc: 'Tangy, spicy wok-tossed fish preparation finished with regional curry leaves', price: 410, image: '/Apollo Fish.jpeg' },
+  { id: 11, category: 'starters', veg: true, name: 'Hara Bhara Kebab', desc: 'Delicately pan-fried medallions crafted from blended garden spinach, green peas, and local spices', price: 345, image: '/Hara Bhara Kebab.jpg' },
+
+  // --- BIRYANI ---
+  { id: 4, category: 'biryani', veg: false, name: 'Chicken Dum Biryani', desc: 'Slow-cooked aged basmati rice layered with succulent bone-in marinated chicken and aromatic saffron', price: 375, image: '/Chicken Dum Biryani.png' },
+  { id: 5, category: 'biryani', veg: false, name: 'Nalli Ghosh Biryani', desc: 'Rich, luxurious lamb shank biryani prepared with select premium spices and long-grain basmati rice', price: 525, image: '/Nalli Ghosh Biryani.jpg' },
+  { id: 12, category: 'biryani', veg: true, name: 'Paneer Biryani', desc: 'Fragrant saffron rice dum-cooked with marinated premium paneer cottage cheese blocks', price: 355, image: '/Paneer Biryani.jpg' },
+  { id: 13, category: 'biryani', veg: false, name: 'Mutton Dum Biryani', desc: 'Highly aromatic authentic long-grain rice layered with tender chunks of seasoned goat meat', price: 460, image: '/ MuttonDumBiryani.jpg' },
+
+  // --- MAIN COURSE / CURRIES ---
+  { id: 6, category: 'maincourse', veg: false, name: 'Gongura Chicken', desc: 'Tangy and fiery classic Andhra style chicken curry simmered with authentic sorrel leaves', price: 395, image: '/Gongura Chicken Koora.jpg' },
+  { id: 14, category: 'maincourse', veg: true, name: 'Paneer Curry', desc: 'Premium paneer cubes simmered in a dense, velvety freshly crushed black pepper sauce', price: 290, image: '/Miryala Paneer Curry.jpg' },
+
+  // --- BREADS ---
+  { id: 7, category: 'breads', veg: true, name: 'Garlic Naan', desc: 'Soft leavened tandoor-baked flatbread infused with minced garlic cloves and dynamic dairy butter', price: 75, image: '/Garlic Naan.jpg' },
+  { id: 24, category: 'breads', veg: true, name: 'Butter Naan', desc: 'Classic fluffy refined-flour flatbread multi-layered with premium melted pure butter', price: 65, image: '/butter-naan.jpg' },
+  { id: 25, category: 'breads', veg: true, name: 'Tandoori Roti', desc: 'Traditional whole wheat stone-ground flatbread baked along the clay walls of our open tandoor', price: 45, image: '/tandoori-roti.jpg' },
+
+  // --- DESSERTS ---
+  { id: 8, category: 'desserts', veg: true, name: 'Gulab Jamun', desc: 'Deep-fried golden milk-solid dumplings soaked in aromatic cardamom-infused warm sugar syrup', price: 110, image: '/Gulab Jamun.jpg' },
+  { id: 15, category: 'desserts', veg: true, name: 'Shahi Tukda', desc: 'Royal Mughlai bread pudding crisp fried in ghee, topped with condensed rabri milk cream and pistachios', price: 110, image: '/Shahi Tukda.jpg' },
+
+  // --- BEVERAGES ---
+  { id: 9, category: 'beverages', veg: true, name: 'Virgin Mojito', desc: 'Refreshing muddled presentation of fresh garden mint leaves, lime wedges, simple syrup, and fizzy soda', price: 149, image: '/Virgin Mojito.jpg' },
+  { id: 16, category: 'beverages', veg: true, name: 'Mango Shake', desc: 'Thick, creamy gourmet milkshake blended exclusively from sweet Alphonso mango pulps', price: 189, image: '/Mango Shake.jpg' },
+  { id: 27, category: 'beverages', veg: true, name: 'Masala Spiced Buttermilk', desc: 'Traditional diluted churned yogurt cooling refresher infused with ginger, green chillies, and fresh coriander', price: 85, image: '/buttermilk.jpg' },
+  { id: 28, category: 'beverages', veg: true, name: 'Fresh Lime Soda', desc: 'Zesty custom fresh-squeezed lime preparation available in your absolute preference of salt or sugar balance', price: 95, image: '/lime-soda.jpg' },
 ];
 
-const dishes = [
-  { id: 1, category: 'starters', veg: false, name: 'Chicken 65', desc: 'Crispy deep-fried chicken marinated in spices and curry leaves', price: 355, image: '/chicken65.jpg' },
-  { id: 2, category: 'starters', veg: false, name: 'Tandoori Chicken', desc: 'Half chicken marinated in yogurt & spices, grilled in tandoor', price: 375, image: '/Tandoori Chicken.jpg' },
-  { id: 3, category: 'starters', veg: false, name: 'Dragon Chicken', desc: 'Crispy chicken tossed in spicy dragon sauce with bell peppers', price: 355, image: '/Dragon Chicken.png' },
-  { id: 4, category: 'starters', veg: true, name: 'Paneer Tikka', desc: 'Soft paneer cubes marinated in spiced yogurt, grilled to perfection', price: 348, image: '/Paneer Tikka.jpg' },
-  { id: 5, category: 'starters', veg: true, name: 'Hara Bhara Kebab', desc: 'Spinach & pea patties infused with herbs and green chillies', price: 345, image: '/Hara Bhara Kebab.jpg' },
-  { id: 6, category: 'starters', veg: false, name: 'Apollo Fish', desc: 'Fried fish tossed in tangy sauce with fresh herbs', price: 410, image: '/Apollo Fish.jpeg' },
-  { id: 7, category: 'biryani', veg: false, name: 'Chicken Dum Biryani', desc: 'Slow-cooked aromatic basmati rice with tender chicken pieces', price: 375, image: '/Chicken Dum Biryani.png' },
-  { id: 8, category: 'biryani', veg: false, name: 'Spl Chicken Biryani', desc: 'Our special biryani with hand-picked spices and succulent chicken', price: 415, image: '/Spl Chicken Biryani.jpg' },
-  { id: 9, category: 'biryani', veg: false, name: 'Nalli Ghosh Biryani', desc: 'Rich mutton shank biryani slow-cooked with whole spices', price: 525, image: '/Nalli Ghosh Biryani.jpg' },
-  { id: 10, category: 'biryani', veg: true, name: 'Paneer Biryani', desc: 'Fragrant basmati rice layered with spiced paneer and saffron', price: 355, image: '/Paneer Biryani.jpg' },
-  { id: 11, category: 'biryani', veg: true, name: 'Guttivankaya Biryani', desc: 'Traditional stuffed brinjal biryani — a Telangana specialty', price: 335, image: '/Guttivankaya Biryani.jpg' },
-  { id: 12, category: 'biryani', veg: false, name: 'Mutton Dum Biryani', desc: 'Tender mutton pieces cooked in dum style with aromatic spices', price: 460, image: '/MuttonDumBiryani.jpg' },
-  { id: 13, category: 'maincourse', veg: false, name: 'Gongura Chicken Koora', desc: 'Tangy Andhra-style chicken curry made with sorrel leaves', price: 395, image: '/Gongura Chicken Koora.jpg' },
-  { id: 14, category: 'maincourse', veg: false, name: 'Miryala Kodi Koora', desc: 'Fiery pepper chicken curry — a bold Telangana classic', price: 395, image: '/Miryala Kodi Koora.jpg' },
-  { id: 15, category: 'maincourse', veg: true, name: 'Miryala Paneer Curry', desc: 'Paneer in a rich pepper-based South Indian gravy', price: 290, image: '/Miryala Paneer Curry.jpg' },
-  { id: 16, category: 'maincourse', veg: false, name: 'Keema Fry', desc: 'Spiced minced meat cooked with onions, tomatoes and fresh herbs', price: 485, image: '/Kheema Frya.jpg' },
-  { id: 17, category: 'maincourse', veg: true, name: 'Guttivankaya Curry', desc: 'Whole stuffed baby brinjals in a tangy peanut-sesame gravy', price: 290, image: '/Guttivankaya Curry.jpg' },
-  { id: 19, category: 'breads', veg: true, name: 'Garlic Naan', desc: 'Soft leavened bread topped with garlic and butter, baked in tandoor', price: 75, image: '/Garlic Naan.jpg' },
-  { id: 20, category: 'breads', veg: true, name: 'Paneer Kulcha', desc: 'Stuffed bread with spiced paneer filling, baked in tandoor', price: 80, image: '/Paneer Kulcha.jpg' },
-  { id: 21, category: 'breads', veg: true, name: 'Roti Basket', desc: 'Assorted breads — a perfect mix of roti, naan and paratha', price: 220, image: '/Roti Basket.jpg' },
-  { id: 22, category: 'breads', veg: true, name: 'Laccha Paratha', desc: 'Flaky multi-layered whole wheat paratha with a crispy texture', price: 80, image: '/Laccha Paratha.jpg' },
-  { id: 23, category: 'desserts', veg: true, name: 'Gulab Jamun', desc: 'Soft milk-solid dumplings soaked in rose-flavored sugar syrup', price: 110, image: '/Gulab Jamun.jpg' },
-  { id: 24, category: 'desserts', veg: true, name: 'Double Ka Meetha', desc: 'Hyderabadi bread pudding soaked in milk and garnished with dry fruits', price: 110, image: '/Double Ka Meetha.jpg' },
-  { id: 25, category: 'desserts', veg: true, name: 'Shahi Tukda', desc: 'Royal bread dessert with condensed milk, saffron and pistachios', price: 110, image: '/Shahi Tukda.jpg' },
-  { id: 27, category: 'beverages', veg: true, name: 'Virgin Mojito', desc: 'Fresh mint, lime and soda — light, cool and refreshing', price: 149, image: '/Virgin Mojito.jpg' },
-  { id: 28, category: 'beverages', veg: true, name: 'Mango Shake', desc: 'Thick and creamy Alphonso mango shake — a tropical delight', price: 189, image: '/Mango Shake.jpg' },
-  { id: 29, category: 'beverages', veg: true, name: 'Strawberry Delight', desc: 'Chilled strawberry mocktail with a hint of lemon and mint', price: 149, image: '/Strawberry Delight.jpg' },
-  { id: 30, category: 'beverages', veg: true, name: 'Butter Milk', desc: 'Traditional spiced chaas — Plain or Masala', price: 99, image: '/Butter Milk.jpg' },
+const VEG_FILTERS = [
+  { id: 'all', label: 'All Palette' },
+  { id: 'veg', label: 'Pure Veg' },
+  { id: 'nonveg', label: 'Non-Veg' },
 ];
 
-export default function Menu({ onBookTable }) {
-  const [activeCategory, setActiveCategory] = useState('all');
+// ======================================================
+// FOOD TYPE INDICATOR ICON (MATCHING SCREENSHOT)
+// ======================================================
+const VegIndicator = React.memo(({ veg }) => (
+  <div 
+    className={`p-0.5 rounded border bg-[#05140b]/90 shadow-md ${
+      veg ? 'border-emerald-500/60' : 'border-rose-500/60'
+    }`}
+    aria-label={veg ? "Vegetarian" : "Non-Vegetarian"}
+  >
+    <div className={`w-2 h-2 rounded-sm ${veg ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+  </div>
+));
+VegIndicator.displayName = 'VegIndicator';
+
+// ======================================================
+// REFRESHED DUAL-LAYOUT RESPONSIVE PREMIUM CARD
+// ======================================================
+const DishCard = React.memo(({ dish }) => {
+  return (
+    <article className="group relative flex flex-row lg:flex-col overflow-hidden rounded-2xl border border-emerald-900/30 bg-[#06190e]/60 p-2 lg:p-0 hover:border-[#dfba6b]/40 hover:bg-[#0a2315] transition-all duration-300 shadow-lg">
+      
+      {/* Media Window - Square Aspect ratio on mobile, landscape wide on desktop */}
+      <div className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-full lg:h-52 rounded-xl lg:rounded-b-none overflow-hidden flex-shrink-0">
+        <img
+          src={dish.image}
+          alt={dish.name}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#05140b]/40 via-transparent to-transparent" />
+        
+        {/* Absolute float food marker badge */}
+        <div className="absolute top-2 left-2 z-10">
+          <VegIndicator veg={dish.veg} />
+        </div>
+      </div>
+
+      {/* Description Meta Content Blocks (Zero Text Truncation Strategy) */}
+      <div className="pl-4 pr-2 py-1 lg:p-5 flex flex-row lg:flex-col justify-between flex-grow gap-2 items-center lg:items-stretch">
+        <div className="flex-grow">
+          <h3 className="font-serif text-[15px] sm:text-base lg:text-lg text-emerald-100 font-bold tracking-wide transition-colors duration-300 group-hover:text-[#dfba6b] mb-1">
+            {dish.name}
+          </h3>
+          <p className="text-emerald-200/50 text-xs sm:text-sm font-light leading-relaxed">
+            {dish.desc}
+          </p>
+        </div>
+
+        {/* Highlighted Right/Bottom Aligned Cost Badge Pill */}
+        <div className="flex-shrink-0 ml-3 lg:ml-0 lg:mt-3">
+          <span className="inline-block text-xs sm:text-sm font-bold text-[#dfba6b] whitespace-nowrap bg-[#dfba6b]/10 px-3 py-1 rounded-full border border-[#dfba6b]/20 min-w-[55px] text-center">
+            ₹{dish.price}
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+});
+DishCard.displayName = 'DishCard';
+
+// ======================================================
+// COMPONENT MAIN SITE STRUCTURE
+// ======================================================
+export default function Menu() {
+  const [activeCat, setActiveCat] = useState('all');
   const [vegFilter, setVegFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const searchRef = useRef(null);
+  
+  const navContainerRef = useRef(null);
 
-  const handleSearchChange = useCallback((e) => {
-    setSearchQuery(e.target.value);
+  // Filter processing implementation
+  const filteredDishes = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return DISHES.filter((dish) => {
+      if (activeCat !== 'all' && dish.category !== activeCat) return false;
+      if (vegFilter === 'veg' && !dish.veg) return false;
+      if (vegFilter === 'nonveg' && dish.veg) return false;
+      
+      return !query || 
+        dish.name.toLowerCase().includes(query) || 
+        dish.desc.toLowerCase().includes(query);
+    });
+  }, [activeCat, vegFilter, searchQuery]);
+
+  // Counts grouping matrix
+  const catCounts = useMemo(() => {
+    const counts = { all: DISHES.length };
+    DISHES.forEach((d) => {
+      counts[d.category] = (counts[d.category] || 0) + 1;
+    });
+    return counts;
   }, []);
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    searchRef.current?.focus();
+  // Premium Carousel Indicator Engine
+  const executeNavScroll = (direction) => {
+    if (navContainerRef.current) {
+      const offset = direction === 'left' ? -220 : 220;
+      navContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
   };
-
-  const resetAll = () => {
-    setActiveCategory('all');
-    setVegFilter('all');
-    setSearchQuery('');
-  };
-
-  const filteredDishes = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-    return dishes.filter((dish) => {
-      const matchCategory = activeCategory === 'all' || dish.category === activeCategory;
-      const matchVeg = vegFilter === 'all' ||
-        (vegFilter === 'veg' && dish.veg) ||
-        (vegFilter === 'nonveg' && !dish.veg);
-      const matchSearch = q === '' ||
-        dish.name.toLowerCase().includes(q) ||
-        dish.desc.toLowerCase().includes(q);
-      return matchCategory && matchVeg && matchSearch;
-    });
-  }, [activeCategory, vegFilter, searchQuery]);
-
-  const hasActiveFilters = activeCategory !== 'all' || vegFilter !== 'all' || searchQuery !== '';
 
   return (
-    <>
-      <section id="menu" className="relative py-24 overflow-hidden bg-jungle-950">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(46,158,46,0.07),transparent)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_100%_80%,rgba(212,160,23,0.05),transparent)]" />
+    <section id="menu" className="relative h-screen flex flex-col overflow-hidden bg-[#05140b] text-emerald-50 antialiased selection:bg-[#dfba6b]/30">
+      
+      {/* Background Ambience Layers */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(223,186,107,0.12),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(5,20,11,0.6))]" />
+      </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Heading */}
-          <div className="text-center mb-12">
-            <p className="font-cormorant italic text-gold-400/70 text-base tracking-[0.3em] uppercase mb-3">Explore Our</p>
-            <h2 className="font-cinzel text-4xl sm:text-5xl font-bold text-gold-400">Menu</h2>
-            <div className="flex items-center justify-center gap-4 mt-5 mb-5">
-              <span className="h-[1px] w-20 bg-gradient-to-r from-transparent to-gold-600/50" />
-              <span className="w-1.5 h-1.5 rounded-full bg-gold-500" />
-              <span className="h-[1px] w-20 bg-gradient-to-l from-transparent to-gold-600/50" />
+      {/* ======================================================
+          STICKY CONTEXT HEADER ENGINE
+      ====================================================== */}
+      <header className="relative z-10 flex-shrink-0 border-b border-emerald-900/30 bg-[#05130b]/95 backdrop-blur-xl">
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-5">
+          
+          {/* Reference Recreated Premium Title Layout */}
+          <div className="flex flex-col items-center justify-center mb-8 select-none">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-[0.18em] text-[#dfba6b] uppercase text-center">
+              EXPLORE OUR MENU
+            </h2>
+            <div className="w-full max-w-[280px] sm:max-w-[420px] flex items-center justify-center mt-3 opacity-80">
+              <div className="h-[1px] bg-gradient-to-r from-transparent to-[#dfba6b]/60 flex-grow" />
+              <div className="w-1.5 h-1.5 rounded-full bg-[#dfba6b] mx-3 shadow-[0_0_8px_#dfba6b]" />
+              <div className="h-[1px] bg-gradient-to-l from-transparent to-[#dfba6b]/60 flex-grow" />
             </div>
-            <p className="font-cormorant text-jungle-100 text-xl sm:text-2xl tracking-wide max-w-xl mx-auto">
-              From tandoor to dum — every dish tells a story of tradition and taste
-            </p>
           </div>
 
-          {/* Search */}
-          <div className="max-w-xl mx-auto mb-6">
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold-500/70 group-focus-within:text-gold-400 transition-colors" />
+          {/* Filtering Layout Block */}
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center md:justify-between">
+            
+            {/* Search Implementation */}
+            <div className="relative flex-grow max-w-lg">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
               <input
-                ref={searchRef}
                 type="text"
                 value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search dishes..."
-                className="w-full pl-11 pr-11 py-3.5 bg-jungle-900/70 border border-jungle-600/50 rounded-full font-cormorant text-lg text-jungle-100 placeholder:text-jungle-400/60 focus:outline-none focus:border-gold-500/60 focus:bg-jungle-900/90 focus:shadow-[0_0_20px_rgba(212,160,23,0.15)] transition-all"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search menu plates, items, ingredients..."
+                className="w-full pl-10 pr-10 py-3 text-sm rounded-xl border border-emerald-900/60 bg-[#06190e]/80 text-emerald-100 placeholder:text-emerald-700/80 focus:outline-none focus:border-[#dfba6b]/50 focus:ring-1 focus:ring-[#dfba6b]/20 transition-all shadow-inner"
               />
               {searchQuery && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-jungle-600/60 hover:bg-gold-500/80 flex items-center justify-center"
-                  aria-label="Clear search"
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-emerald-900/40 text-emerald-400 hover:text-emerald-100"
                 >
-                  <X className="w-3 h-3 text-jungle-100" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
-          </div>
 
-          {/* Veg Filters */}
-          <div className="flex justify-center gap-3 mb-6">
-            {vegFilters.map(({ id, label, dot }) => (
-              <button
-                key={id}
-                onClick={() => setVegFilter(id)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full font-cinzel text-xs tracking-widest uppercase transition-all ${
-                  vegFilter === id
-                    ? 'text-jungle-950 bg-gradient-to-r from-gold-500 to-gold-600 shadow-lg shadow-gold-500/50 font-bold scale-105'
-                    : 'text-jungle-100 border border-jungle-600/50 hover:border-gold-500/50'
-                }`}
-              >
-                {dot && <span className={`w-2.5 h-2.5 rounded-full ${dot === 'green' ? 'bg-green-400' : 'bg-red-500'}`} />}
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* ==================== CATEGORY TABS - SCROLL ON MOBILE, CENTERED ON DESKTOP ==================== */}
-          <div className="mb-8">
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory 
-                            lg:justify-center lg:overflow-x-visible lg:pb-0 -mx-2 px-2 lg:mx-0 lg:px-0">
-              {categories.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveCategory(id)}
-                  className={`
-                    flex-shrink-0
-                    relative
-                    overflow-hidden
-                    rounded-full
-                    px-6 py-3
-                    font-cinzel
-                    text-sm
-                    tracking-[0.16em]
-                    uppercase
-                    whitespace-nowrap
-                    transition-all duration-300
-                    active:scale-95
-                    snap-start
-                    ${
-                      activeCategory === id
-                        ? `
-                          bg-gradient-to-r from-gold-500 via-amber-400 to-gold-600
-                          text-jungle-950
-                          shadow-[0_0_24px_rgba(212,160,23,0.38)]
-                          font-bold
-                          scale-[1.03]
-                        `
-                        : `
-                          border border-jungle-600/50
-                          bg-jungle-900/40
-                          text-jungle-100
-                          hover:border-gold-500/50
-                          hover:bg-jungle-800/50
-                          hover:text-gold-300
-                        `
-                    }
-                  `}
-                >
-                  <span className="relative z-10">{label}</span>
-                </button>
-              ))}
+            {/* Segment Type Filter Pill Controls */}
+            <div className="flex gap-1.5 p-1 rounded-xl bg-[#030d07]/90 border border-emerald-900/40 self-start md:self-auto shadow-md">
+              {VEG_FILTERS.map((filter) => {
+                const isSelected = vegFilter === filter.id;
+                return (
+                  <button
+                    key={filter.id}
+                    onClick={() => setVegFilter(filter.id)}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider transition-all duration-200 whitespace-nowrap ${
+                      isSelected 
+                        ? 'bg-[#dfba6b]/10 border border-[#dfba6b]/30 text-[#dfba6b]' 
+                        : 'text-emerald-400/70 hover:text-emerald-100 border border-transparent'
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          {/* Results */}
-          <div className="flex justify-between mb-8 px-1">
-            <p className="font-cormorant text-jungle-300">
-              {filteredDishes.length} {filteredDishes.length === 1 ? 'dish' : 'dishes'} found
-            </p>
-            {hasActiveFilters && (
-              <button
-                onClick={resetAll}
-                className="text-jungle-400 hover:text-gold-400 flex items-center gap-1 text-sm"
-              >
-                <X className="w-3.5 h-3.5" /> Reset
-              </button>
-            )}
+        {/* ======================================================
+            DYNAMIC BUTTON TRIGGERED HORIZONTAL NAV RAIL
+        ====================================================== */}
+        <div className="relative border-t border-emerald-900/20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center group">
+          
+          {/* Left Arrow Action Indicator */}
+          <button
+            onClick={() => executeNavScroll('left')}
+            className="absolute left-1 z-20 p-1.5 rounded-full bg-[#05140b]/95 border border-emerald-800/60 text-[#dfba6b] shadow-xl transition-all duration-200 hover:bg-[#dfba6b] hover:text-[#05140b]"
+            aria-label="Scroll Categories Left"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Hidden Scrollbar Category Hub */}
+          <nav 
+            ref={navContainerRef}
+            className="flex overflow-x-auto scrollbar-none gap-1 py-1 -mb-[1px] w-full px-6 scroll-smooth"
+          >
+            {CATEGORIES.map((cat) => {
+              const isActive = activeCat === cat.id;
+              const hasCount = catCounts[cat.id] || 0;
+
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCat(cat.id)}
+                  className={`flex items-center gap-2.5 px-5 py-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 whitespace-nowrap ${
+                    isActive
+                      ? 'border-[#dfba6b] text-[#dfba6b]'
+                      : 'border-transparent text-emerald-400/60 hover:text-emerald-100'
+                  }`}
+                >
+                  <span className="text-sm">{cat.icon}</span>
+                  <span>{cat.label}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-sans transition-colors ${
+                    isActive ? 'bg-[#dfba6b]/20 text-[#dfba6b]' : 'bg-[#040f08] text-emerald-700'
+                  }`}>
+                    {hasCount}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right Arrow Action Indicator */}
+          <button
+            onClick={() => executeNavScroll('right')}
+            className="absolute right-1 z-20 p-1.5 rounded-full bg-[#05140b]/95 border border-emerald-800/60 text-[#dfba6b] shadow-xl transition-all duration-200 hover:bg-[#dfba6b] hover:text-[#05140b]"
+            aria-label="Scroll Categories Right"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* ======================================================
+          GRID & LIST HYBRID MAIN VIEWPORT
+      ====================================================== */}
+      <main className="relative z-10 flex-grow overflow-y-auto custom-scrollbar">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          
+          <div className="flex items-center justify-between mb-4 px-1">
+            <span className="text-xs text-emerald-600/90 font-medium tracking-wide">
+              Showing {filteredDishes.length} refined menu matches
+            </span>
           </div>
 
-          {/* Dishes Grid */}
-          {filteredDishes.length === 0 ? (
-            <div className="text-center py-20">
-              <Search className="w-16 h-16 mx-auto text-jungle-500 mb-4" />
-              <p className="text-xl text-gold-400/70">No dishes found</p>
-              <button
-                onClick={resetAll}
-                className="mt-6 px-8 py-3 bg-gold-500 text-jungle-950 rounded-full font-bold"
-              >
-                Show All
-              </button>
+          {/* Response Responsive Architecture: List format for Mobile, Grid for Desktop */}
+          {filteredDishes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+              {filteredDishes.map((dish) => (
+                <DishCard key={dish.id} dish={dish} />
+              ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredDishes.map((dish) => (
-                <div
-                  key={dish.id}
-                  className="group relative rounded-3xl overflow-hidden bg-jungle-900 border border-jungle-700/70 hover:border-gold-500/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60"
-                >
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={dish.image}
-                      alt={`${dish.name} - ${dish.desc}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-all duration-[800ms] ease-out group-hover:scale-[1.08]"
-                      style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-jungle-950 via-jungle-950/60 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
-                    <div className="absolute top-4 left-4">
-                      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center bg-black/70 ${dish.veg ? 'border-green-400' : 'border-red-500'}`}>
-                        <div className={`w-3 h-3 rounded-full ${dish.veg ? 'bg-green-400' : 'bg-red-500'}`} />
-                      </div>
-                    </div>
-                    <div className="absolute top-4 right-4">
-                      <span className="font-cinzel font-bold text-sm bg-gradient-to-br from-gold-400 to-amber-500 text-jungle-950 px-4 py-1.5 rounded-full shadow-lg">
-                        ₹{dish.price}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-cinzel text-xl text-gold-300 group-hover:text-gold-100 transition-colors">
-                      {dish.name}
-                    </h3>
-                    <p className="mt-2 text-jungle-100/80 text-[15px] leading-relaxed line-clamp-2">
-                      {dish.desc}
-                    </p>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform origin-center" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* CTA */}
-          {filteredDishes.length > 0 && (
-            <div className="text-center mt-16">
-              <button
-                onClick={onBookTable}
-                className="group relative px-10 py-5 bg-gradient-to-r from-gold-500 via-amber-400 to-gold-600 text-jungle-950 font-cinzel tracking-widest text-sm uppercase rounded-2xl overflow-hidden hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gold-500/30"
+            <div className="py-28 text-center rounded-2xl border border-dashed border-emerald-900/40 bg-[#06170d]/30">
+              <p className="text-emerald-400/60 text-sm">No culinary items match your filter criteria.</p>
+              <button 
+                onClick={() => { setActiveCat('all'); setVegFilter('all'); setSearchQuery(''); }}
+                className="mt-4 text-xs font-bold uppercase tracking-wider text-[#dfba6b] hover:underline"
               >
-                Reserve Your Table
+                Reset Layout Filters
               </button>
             </div>
           )}
         </div>
-      </section>
-    </>
+      </main>
+    </section>
   );
 }
