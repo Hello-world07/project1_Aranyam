@@ -1,159 +1,141 @@
 # ARANYAM — Jungle Theme Restaurant
 
-Client concept site for **Aranyam Jungle Theme Restaurant** (Amogham Foods) — a premium, jungle-themed showcase across Warangal, Karimnagar, and Hyderabad.
+> Premium jungle-themed **marketing SPA** for Aranyam (Amogham Foods) — freelance concept redesign across **Warangal · Karimnagar · Hyderabad**.
 
 | | |
 |---|---|
-| **Type** | Static SPA (marketing + booking UX) |
-| **Language** | JavaScript (JSX) — no TypeScript in `src/` |
+| **Stack** | React 18 · Vite 5 · React Router 7 · Tailwind CSS 3 · Lucide |
+| **Runtime** | Browser-only static SPA (`dist/` after build) |
+| **Source** | JavaScript (`.jsx`) — React in `src/`, no app TypeScript |
 | **Author** | Pranith Konda |
 
 ---
 
-## Tech stack
+## Frameworks & tooling
 
-| Layer | Technology | Version (approx.) | Role |
-|-------|------------|-------------------|------|
-| UI library | [React](https://react.dev/) | 18.3 | Components, hooks, client-side UI |
-| Bundler / dev server | [Vite](https://vitejs.dev/) | 5.4 | Fast HMR, ESM build, `@vitejs/plugin-react` |
-| Routing | [React Router](https://reactrouter.com/) | 7.x | `BrowserRouter`, `Routes`, `Route`, `Link` |
-| Styling | [Tailwind CSS](https://tailwindcss.com/) | **3.4** | Utility-first CSS via `tailwind.config.js` |
-| CSS pipeline | PostCSS + Autoprefixer | 8.x / 10.x | Processes Tailwind in `postcss.config.js` |
-| Icons | [Lucide React](https://lucide.dev/) | 0.34x | SVG icons (nav, contact, gallery controls) |
-| Linting | ESLint 9 (flat config) | 9.x | `eslint.config.js` + React Hooks / Refresh plugins |
+| Package | Version | What it does in this repo |
+|---------|---------|---------------------------|
+| **react** / **react-dom** | ^18.3.1 | UI via function components + hooks (`useState`, `useEffect`, `useRef`, `useCallback`) |
+| **vite** | ^5.4.2 | Dev server, HMR, production bundle; entry `index.html` → `src/main.jsx` |
+| **@vitejs/plugin-react** | ^4.3.1 | Fast Refresh for JSX |
+| **react-router-dom** | ^7.15.1 | Client routing: `BrowserRouter`, `Routes`, `Route`, `Link`, `useLocation` |
+| **tailwindcss** | ^3.4.19 | Utility CSS; theme in `tailwind.config.js` (not Tailwind v4 runtime) |
+| **postcss** + **autoprefixer** | ^8.5 / ^10.5 | Compiles Tailwind via `postcss.config.js` |
+| **lucide-react** | ^0.344.0 | Tree-shakeable SVG icons |
+| **eslint** (+ react-hooks, react-refresh) | ^9.9 | Flat config in `eslint.config.js` |
 
-**Not used in source (listed in `package.json` only):** `@supabase/supabase-js` — no backend integration yet; forms are client-side UI.
+**In `package.json` but unused in `src/`:** `@supabase/supabase-js` (reserved for future reservations/API).  
+**Not used:** Next.js, Framer Motion, Redux/Zustand, CSS-in-JS libraries.
 
-**Intentionally not used:** Framer Motion, Redux/Zustand — animations and state are plain React + CSS/Tailwind.
+### Why these choices
 
-### Why this stack
-
-- **Vite + React** — lightweight SPA, easy static deploy (`dist/`), no SSR needed for a pitch site.
-- **Tailwind v3** — custom `jungle`, `gold`, and `earth` palettes live in `tailwind.config.js` (v4’s config model differs; project standardizes on v3).
-- **React Router** — share one layout (navbar, footer, booking modal) across `/`, `/about`, `/menu`, etc., while Home still stacks all sections for scroll-through demos.
-
-### Typography & theme
-
-Loaded in `src/index.css` from Google Fonts:
-
-- **Cinzel** — headings, navigation, buttons  
-- **Cormorant Garamond** — body, taglines  
-- **Inter** — utility fallback  
-
-Base background: `jungle-950` (`#041504`). Accents: `gold-400` / `gold-500`.
+| Decision | Rationale |
+|----------|-----------|
+| **Vite over CRA/Next** | Fast local dev, simple static deploy; no SSR/CMS needed for a pitch site |
+| **Tailwind v3** | Custom `jungle` / `gold` / `earth` tokens and keyframes live in `tailwind.config.js` (project was stabilized on v3 during build) |
+| **React Router** | Shared shell (nav, footer, booking modal) on every URL; `/` still stacks all sections for one-page demos |
+| **Local state only** | Small surface area; no global store until real APIs exist |
 
 ---
 
-## Architecture
+## Project insights
+
+### Architecture pattern
+
+**Thin pages, fat components.** `src/pages/*` only import section components and set layout (`pt-24`, background). Business UI lives in `src/components/`.
+
+**Persistent shell** (`App.jsx`): `PasswordGate` → `Navbar` → `<Routes>` → `BookingModal` → `FloatingActionButtons` → `Footer`. Hero (`HeroSection`) is defined in `App.jsx` and injected into `Home` as a prop—not its own route.
 
 ```mermaid
-flowchart TB
-  subgraph entry [Entry]
-    HTML[index.html]
-    MAIN[main.jsx]
-    HTML --> MAIN
-  end
-
-  subgraph shell [App shell — App.jsx]
-    GATE[PasswordGate]
-    NAV[Navbar]
-    ROUTES[Routes]
-    MODAL[BookingModal]
-    FAB[FloatingActionButtons]
-    FOOT[Footer]
-    GATE --> NAV & ROUTES & MODAL & FAB & FOOT
-  end
-
-  MAIN -->|BrowserRouter| GATE
-
-  subgraph pages [Pages]
-    HOME[home.jsx]
-    ABOUT[aboutpage.jsx]
-    MENU[menupage.jsx]
-    GALL[gallerypage.jsx]
-    CONT[contactpage.jsx]
-  end
-
-  ROUTES --> HOME & ABOUT & MENU & GALL & CONT
-
-  subgraph sections [Shared section components]
-    A[about.jsx]
-    M[menu.jsx]
-    G[gallery.jsx]
-    C[contact.jsx]
-  end
-
-  HOME --> A & M & G & C
-  ABOUT --> A
-  MENU --> M
-  GALL --> G
-  CONT --> C
+flowchart LR
+  main[main.jsx] --> router[BrowserRouter]
+  router --> app[App.jsx]
+  app --> gate[PasswordGate]
+  gate --> shell[Navbar + Routes + Modal + FAB + Footer]
+  shell --> pages[pages/*]
+  pages --> sections[about · menu · gallery · contact]
 ```
 
-### Boot sequence
+### Navigation model
 
-1. `index.html` mounts `#root` and loads `/src/main.jsx` as an ES module.  
-2. `main.jsx` wraps the app in `StrictMode` and `BrowserRouter`.  
-3. `App.jsx` renders global shell: password gate → navbar → routed page → booking modal → FABs → footer.  
-4. **Hero** lives in `App.jsx` (`HeroSection`) and is passed into `Home` as a prop (parallax hero is not a separate route).
+| Mode | Behavior |
+|------|----------|
+| **Route-based** | `/about`, `/menu`, `/gallery`, `/contact` — full page per section |
+| **Landing** | `/` — hero + all sections in one scroll (pitch / portfolio view) |
+| **Navbar** | `Link` + `useLocation()` for active styling; scroll-shrink logo; mobile drawer with body scroll lock |
 
-### Routing
+### Data & state
 
-| Path | Page file | Content |
-|------|-----------|---------|
-| `/` | `pages/home.jsx` | Hero + About + Menu + Gallery + Contact (single-scroll landing) |
-| `/about` | `pages/aboutpage.jsx` | `about.jsx` only |
-| `/menu` | `pages/menupage.jsx` | `menu.jsx` + book CTA |
-| `/gallery` | `pages/gallerypage.jsx` | `gallery.jsx` |
-| `/contact` | `pages/contactpage.jsx` | `contact.jsx` |
+| Layer | Implementation |
+|-------|----------------|
+| **Content** | Static arrays in components (`DISHES`, `CATEGORIES`, `photos`, `videos`, location objects) |
+| **Menu** | ~30 dishes, 7 categories, client-side veg + search filters |
+| **Gallery** | 6 photos + 5 videos; lightbox; 9:16 video cards (`preload="metadata"`) |
+| **Booking** | Modal state in `App.jsx`; `onBookTable` callback to Navbar / Hero / Menu |
+| **Demo lock** | `PasswordGate` — client-side compare only (**not** production auth) |
 
-Navbar (`navbar.jsx`) uses `Link` + `useLocation()` for active route styling.
+No REST/GraphQL, env-based API, or form submission backend yet.
 
-### State & data
+### UX & performance techniques
 
-| Concern | Implementation |
-|---------|----------------|
-| Auth / demo lock | `PasswordGate` in `App.jsx` — local `useState`; password constant in component |
-| Booking UI | `bookingOpen` in `App.jsx`; `onBookTable` passed to Navbar, Hero, Menu |
-| Menu filters | `menu.jsx` — `useState` for category, veg filter, search; `DISHES` / `CATEGORIES` static arrays |
-| Gallery | Lightbox index, video play/mute — component-local state |
-| Scroll effects | `useEffect` listeners (navbar shrink, hero parallax, scroll-to-top FAB) |
-| Scroll reveal | `useScrollReveal` hook in `App.jsx` (`IntersectionObserver`) — available for sections |
+- Hero **parallax** via `requestAnimationFrame` + `scrollY` (in `HeroSection`)
+- Menu images: `loading="lazy"`, `decoding="async"`
+- Menu section: `background-attachment: fixed` parallax on desktop (scroll on mobile/iOS)
+- **IntersectionObserver** hook `useScrollReveal` in `App.jsx` (ready for section animations)
+- Custom scrollbar / smooth scroll in global CSS (`index.css`)
+- Passive scroll listeners where attached (`navbar.jsx`)
 
-No API layer: dish list, locations, and video metadata are **hard-coded in components**.
+### Design system (Tailwind)
 
----
+| Token | Use |
+|-------|-----|
+| `jungle-950` (`#041504`) | Page background |
+| `gold-400` / `gold-500` | Headlines, CTAs, borders |
+| `earth-800+` | Mobile menu gradients |
 
-## Feature map (by component)
-
-| File | Responsibility |
-|------|----------------|
-| `navbar.jsx` | Fixed nav, scroll shrink, mobile drawer, route-aware active link |
-| `about.jsx` | Story, 3 city cards, stats; responsive image stack (mobile) / side-by-side (desktop) |
-| `menu.jsx` | 7 categories, veg/search filters, lazy images, parallax `backgroundAttachment: fixed` on desktop |
-| `gallery.jsx` | Masonry-style photo grid, lightbox, 9:16 video cards with category tabs |
-| `contact.jsx` | Hours, 3 locations, reservation form (UI), maps/social links |
-| `bookingmodal.jsx` | Location cards, phones, Swiggy / Zomato / District deep links |
-| `floatingActionbuttons.jsx` | Scroll-to-top + quick actions |
-| `footer.jsx` | Brand, links, social, hours |
+**Fonts** (Google Fonts in `index.css`): Cinzel (UI/headings), Cormorant Garamond (body), Inter (fallback).  
+**Motion** (`tailwind.config.js`): `shimmer`, `glow`, `leaf-sway`, fade/slide keyframes.
 
 ---
 
-## Project layout
+## Routes & components
+
+| Path | Page | Renders |
+|------|------|---------|
+| `/` | `home.jsx` | `HeroSection` + about + menu + gallery + contact |
+| `/about` | `aboutpage.jsx` | `about.jsx` |
+| `/menu` | `menupage.jsx` | `menu.jsx` |
+| `/gallery` | `gallerypage.jsx` | `gallery.jsx` |
+| `/contact` | `contactpage.jsx` | `contact.jsx` |
+
+| Component | Key responsibility |
+|-----------|-------------------|
+| `navbar.jsx` | Sticky nav, mobile menu, route highlight |
+| `about.jsx` | Story, 3 cities, stats; stacked mobile / 2-col desktop |
+| `menu.jsx` | Filterable menu grid, parallax bg |
+| `gallery.jsx` | Photo grid + lightbox + video grid |
+| `contact.jsx` | Locations, hours, reservation form UI |
+| `bookingmodal.jsx` | Phones + Swiggy / Zomato / District links |
+| `floatingActionbuttons.jsx` | Scroll-to-top + shortcuts |
+| `footer.jsx` | Brand, social, links |
+
+---
+
+## Repository layout
 
 ```
 ARANYAM/
-├── public/              # Static URLs: /hero.jpg, /logo.png, dish images, *.mp4
+├── public/                 # Served at / — images, videos, favicon
 ├── src/
-│   ├── main.jsx         # ReactDOM.createRoot + BrowserRouter
-│   ├── App.jsx          # PasswordGate, HeroSection, Routes, global modals
-│   ├── index.css        # Fonts, @tailwind, base body styles
-│   ├── pages/           # Thin wrappers → section components
-│   └── components/      # UI sections + navbar, footer, booking
-├── tailwind.config.js   # Colors, fonts, keyframes (shimmer, glow, leaf-sway)
-├── postcss.config.js    # tailwindcss + autoprefixer
-├── vite.config.js       # @vitejs/plugin-react only
-└── eslint.config.js     # Flat ESLint for **/*.{js,jsx}
+│   ├── main.jsx            # createRoot + BrowserRouter
+│   ├── App.jsx             # Gate, hero, routes, booking state
+│   ├── index.css           # @tailwind + fonts + base styles
+│   ├── pages/              # Route wrappers
+│   └── components/         # Sections + chrome
+├── tailwind.config.js
+├── postcss.config.js
+├── vite.config.js          # plugins: [react()]
+└── package.json
 ```
 
 ---
@@ -162,62 +144,56 @@ ARANYAM/
 
 ```bash
 npm install
-npm run dev      # → http://localhost:5173
-npm run build    # → dist/
-npm run preview  # serve production build
+npm run dev       # http://localhost:5173
+npm run build     # output: dist/
+npm run preview
 npm run lint
 ```
 
-**Demo gate:** Unlock via password in `PasswordGate` (`src/App.jsx`) before the site renders.
-
-**Node:** 18+ recommended.
+**Node 18+** recommended.  
+**Demo:** unlock via `PasswordGate` in `src/App.jsx` (password set in component).
 
 ---
 
-## Assets (`public/`)
+## Static assets (`public/`)
 
-Vite serves `public/` at the site root. Required for full visuals:
-
-| Asset | Used by |
-|-------|---------|
-| `hero.jpg`, `logo.png` | Hero, navbar |
+| Assets | Purpose |
+|--------|---------|
+| `hero.jpg`, `logo.png`, `favicon.png` | Hero + branding |
 | `logo2.png`, `logo3.jpg` | About / menu backgrounds |
-| `gallery1.jpg`–`gallery4.jpg` | Gallery grid |
-| `video1.mp4`–`video5.mp4` | Gallery video section |
-| Per-dish images (e.g. `chicken65.jpg`) | `menu.jsx` `DISHES[].image` |
+| `gallery1.jpg`–`gallery6.jpg` | Gallery |
+| `video1.mp4`–`video5.mp4` | Gallery videos |
+| Dish images referenced in `menu.jsx` | Per-item photos |
 
-Missing files → broken images or empty backgrounds; no build-time check.
-
----
-
-## Design tokens (Tailwind)
-
-Defined in `tailwind.config.js`:
-
-| Scale | Purpose |
-|-------|---------|
-| `jungle-50` … `jungle-950` | Greens + dark UI (`950` = page base) |
-| `gold-300` … `gold-700` | CTAs, headings, borders |
-| `earth-600` … `earth-900` | Mobile menu / earthy gradients |
-
-Custom animations: `fade-in-down`, `fade-in-up`, `slide-in-right`, `shimmer`, `leaf-sway`, `glow`.
+Vite copies `public/` as-is; broken paths fail silently at runtime.
 
 ---
 
-## Deployment notes
+## Deploy
 
-- Output is a **static site** (`npm run build` → upload `dist/` to Netlify, Vercel, GitHub Pages, etc.).
-- Configure SPA fallback so all routes serve `index.html`.
-- Environment variables: none required today (no Supabase keys in use).
+1. `npm run build` → upload **`dist/`** (Netlify, Vercel, GitHub Pages, etc.)
+2. Enable **SPA fallback** (`/*` → `index.html`) so `/menu` works on refresh
+3. No `.env` required until Supabase or APIs are wired
 
 ---
 
-## Further reading
+## Extending the project
 
-- **`PROJECT_CONTEXT.md`** — iteration notes, prompts, Tailwind v3 vs v4 fixes during build
+| Next step | Suggested approach |
+|-----------|-------------------|
+| **Reservations** | Wire `contact.jsx` / modal forms to Supabase or a serverless function |
+| **CMS / menu** | Replace `DISHES` array with fetched JSON or headless CMS |
+| **Real auth** | Replace `PasswordGate` with server-side or hosting-level protection |
+| **Type safety** | Migrate `src/` to `.tsx` (types already in devDependencies) |
+
+---
+
+## More docs
+
+**`PROJECT_CONTEXT.md`** — build history, Tailwind v3 migration notes, design prompts.
 
 ---
 
 ## License
 
-Private client concept work. All rights reserved unless agreed otherwise with the client.
+Private client concept work. All rights reserved unless agreed with the client.
