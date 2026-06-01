@@ -1,184 +1,223 @@
 # ARANYAM — Jungle Theme Restaurant
 
-A premium, jungle-themed marketing website for **Aranyam Jungle Theme Restaurant** (a unit of Amogham Foods). Built as a concept redesign to showcase a modern, cinematic dining experience across three locations in Telangana.
-
-**Live concept tagline:** *Where the wild dines in luxury.*
-
----
-
-## Features
-
-- **Multi-page routing** — Home, About, Menu, Gallery, and Contact
-- **Password-protected demo** — Private preview gate before the site loads
-- **Responsive design** — Mobile-first layouts with dedicated page variants
-- **Booking modal** — Table reservations and third-party links (Swiggy, Zomato, District)
-- **Rich sections**
-  - Parallax hero with CTAs
-  - Our Story (founders, locations, stats)
-  - Menu with category filters and 26+ dishes
-  - Photo gallery with lightbox
-  - Vertical video grid (founder stories, celebrity review, behind the scenes)
-  - Contact with three locations, hours, and reservation form
-- **Floating action buttons** — Quick access to book or contact
-
----
-
-## Tech Stack
+Client concept site for **Aranyam Jungle Theme Restaurant** (Amogham Foods) — a premium, jungle-themed showcase across Warangal, Karimnagar, and Hyderabad.
 
 | | |
 |---|---|
-| **Framework** | React 18 |
-| **Build tool** | Vite 5 |
-| **Styling** | Tailwind CSS v3 |
-| **Routing** | React Router v7 |
-| **Icons** | Lucide React |
-
-**Typography:** [Cinzel](https://fonts.google.com/specimen/Cinzel) (headings, nav) · [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) (body)
+| **Type** | Static SPA (marketing + booking UX) |
+| **Language** | JavaScript (JSX) — no TypeScript in `src/` |
+| **Author** | Pranith Konda |
 
 ---
 
-## Getting Started
+## Tech stack
 
-### Prerequisites
+| Layer | Technology | Version (approx.) | Role |
+|-------|------------|-------------------|------|
+| UI library | [React](https://react.dev/) | 18.3 | Components, hooks, client-side UI |
+| Bundler / dev server | [Vite](https://vitejs.dev/) | 5.4 | Fast HMR, ESM build, `@vitejs/plugin-react` |
+| Routing | [React Router](https://reactrouter.com/) | 7.x | `BrowserRouter`, `Routes`, `Route`, `Link` |
+| Styling | [Tailwind CSS](https://tailwindcss.com/) | **3.4** | Utility-first CSS via `tailwind.config.js` |
+| CSS pipeline | PostCSS + Autoprefixer | 8.x / 10.x | Processes Tailwind in `postcss.config.js` |
+| Icons | [Lucide React](https://lucide.dev/) | 0.34x | SVG icons (nav, contact, gallery controls) |
+| Linting | ESLint 9 (flat config) | 9.x | `eslint.config.js` + React Hooks / Refresh plugins |
 
-- [Node.js](https://nodejs.org/) 18+ (LTS recommended)
-- npm
+**Not used in source (listed in `package.json` only):** `@supabase/supabase-js` — no backend integration yet; forms are client-side UI.
 
-### Install and run
+**Intentionally not used:** Framer Motion, Redux/Zustand — animations and state are plain React + CSS/Tailwind.
 
-```bash
-git clone <repository-url>
-cd ARANYAM
-npm install
-npm run dev
+### Why this stack
+
+- **Vite + React** — lightweight SPA, easy static deploy (`dist/`), no SSR needed for a pitch site.
+- **Tailwind v3** — custom `jungle`, `gold`, and `earth` palettes live in `tailwind.config.js` (v4’s config model differs; project standardizes on v3).
+- **React Router** — share one layout (navbar, footer, booking modal) across `/`, `/about`, `/menu`, etc., while Home still stacks all sections for scroll-through demos.
+
+### Typography & theme
+
+Loaded in `src/index.css` from Google Fonts:
+
+- **Cinzel** — headings, navigation, buttons  
+- **Cormorant Garamond** — body, taglines  
+- **Inter** — utility fallback  
+
+Base background: `jungle-950` (`#041504`). Accents: `gold-400` / `gold-500`.
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph entry [Entry]
+    HTML[index.html]
+    MAIN[main.jsx]
+    HTML --> MAIN
+  end
+
+  subgraph shell [App shell — App.jsx]
+    GATE[PasswordGate]
+    NAV[Navbar]
+    ROUTES[Routes]
+    MODAL[BookingModal]
+    FAB[FloatingActionButtons]
+    FOOT[Footer]
+    GATE --> NAV & ROUTES & MODAL & FAB & FOOT
+  end
+
+  MAIN -->|BrowserRouter| GATE
+
+  subgraph pages [Pages]
+    HOME[home.jsx]
+    ABOUT[aboutpage.jsx]
+    MENU[menupage.jsx]
+    GALL[gallerypage.jsx]
+    CONT[contactpage.jsx]
+  end
+
+  ROUTES --> HOME & ABOUT & MENU & GALL & CONT
+
+  subgraph sections [Shared section components]
+    A[about.jsx]
+    M[menu.jsx]
+    G[gallery.jsx]
+    C[contact.jsx]
+  end
+
+  HOME --> A & M & G & C
+  ABOUT --> A
+  MENU --> M
+  GALL --> G
+  CONT --> C
 ```
 
-Open the URL shown in the terminal (typically `http://localhost:5173`).
+### Boot sequence
 
-### Demo access
+1. `index.html` mounts `#root` and loads `/src/main.jsx` as an ES module.  
+2. `main.jsx` wraps the app in `StrictMode` and `BrowserRouter`.  
+3. `App.jsx` renders global shell: password gate → navbar → routed page → booking modal → FABs → footer.  
+4. **Hero** lives in `App.jsx` (`HeroSection`) and is passed into `Home` as a prop (parallax hero is not a separate route).
 
-The site is wrapped in a password gate for confidential previews. Use the password configured in `src/App.jsx` (`PasswordGate` component) to unlock the demo.
+### Routing
 
-### Production build
+| Path | Page file | Content |
+|------|-----------|---------|
+| `/` | `pages/home.jsx` | Hero + About + Menu + Gallery + Contact (single-scroll landing) |
+| `/about` | `pages/aboutpage.jsx` | `about.jsx` only |
+| `/menu` | `pages/menupage.jsx` | `menu.jsx` + book CTA |
+| `/gallery` | `pages/gallerypage.jsx` | `gallery.jsx` |
+| `/contact` | `pages/contactpage.jsx` | `contact.jsx` |
 
-```bash
-npm run build
-npm run preview
-```
+Navbar (`navbar.jsx`) uses `Link` + `useLocation()` for active route styling.
 
-Static output is written to `dist/`.
+### State & data
+
+| Concern | Implementation |
+|---------|----------------|
+| Auth / demo lock | `PasswordGate` in `App.jsx` — local `useState`; password constant in component |
+| Booking UI | `bookingOpen` in `App.jsx`; `onBookTable` passed to Navbar, Hero, Menu |
+| Menu filters | `menu.jsx` — `useState` for category, veg filter, search; `DISHES` / `CATEGORIES` static arrays |
+| Gallery | Lightbox index, video play/mute — component-local state |
+| Scroll effects | `useEffect` listeners (navbar shrink, hero parallax, scroll-to-top FAB) |
+| Scroll reveal | `useScrollReveal` hook in `App.jsx` (`IntersectionObserver`) — available for sections |
+
+No API layer: dish list, locations, and video metadata are **hard-coded in components**.
 
 ---
 
-## Scripts
+## Feature map (by component)
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with HMR |
-| `npm run build` | Production build to `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run lint` | Run ESLint |
+| File | Responsibility |
+|------|----------------|
+| `navbar.jsx` | Fixed nav, scroll shrink, mobile drawer, route-aware active link |
+| `about.jsx` | Story, 3 city cards, stats; responsive image stack (mobile) / side-by-side (desktop) |
+| `menu.jsx` | 7 categories, veg/search filters, lazy images, parallax `backgroundAttachment: fixed` on desktop |
+| `gallery.jsx` | Masonry-style photo grid, lightbox, 9:16 video cards with category tabs |
+| `contact.jsx` | Hours, 3 locations, reservation form (UI), maps/social links |
+| `bookingmodal.jsx` | Location cards, phones, Swiggy / Zomato / District deep links |
+| `floatingActionbuttons.jsx` | Scroll-to-top + quick actions |
+| `footer.jsx` | Brand, links, social, hours |
 
 ---
 
-## Project Structure
+## Project layout
 
 ```
 ARANYAM/
-├── public/                 # Static assets (images, videos, logo)
+├── public/              # Static URLs: /hero.jpg, /logo.png, dish images, *.mp4
 ├── src/
-│   ├── components/
-│   │   ├── navbar.jsx
-│   │   ├── footer.jsx
-│   │   ├── about.jsx
-│   │   ├── menu.jsx
-│   │   ├── gallery.jsx
-│   │   ├── contact.jsx
-│   │   ├── bookingmodal.jsx
-│   │   └── floatingActionbuttons.jsx
-│   ├── pages/
-│   │   ├── home.jsx
-│   │   ├── aboutpage.jsx
-│   │   ├── menupage.jsx
-│   │   ├── gallerypage.jsx
-│   │   └── contactpage.jsx
-│   ├── App.jsx             # Routes, hero, password gate
-│   ├── main.jsx
-│   └── index.css
-├── tailwind.config.js      # Custom jungle / gold / earth palette
-├── vite.config.js
-└── package.json
+│   ├── main.jsx         # ReactDOM.createRoot + BrowserRouter
+│   ├── App.jsx          # PasswordGate, HeroSection, Routes, global modals
+│   ├── index.css        # Fonts, @tailwind, base body styles
+│   ├── pages/           # Thin wrappers → section components
+│   └── components/      # UI sections + navbar, footer, booking
+├── tailwind.config.js   # Colors, fonts, keyframes (shimmer, glow, leaf-sway)
+├── postcss.config.js    # tailwindcss + autoprefixer
+├── vite.config.js       # @vitejs/plugin-react only
+└── eslint.config.js     # Flat ESLint for **/*.{js,jsx}
 ```
 
 ---
 
-## Routes
+## Quick start
 
-| Path | Page |
-|------|------|
-| `/` | Home — hero plus all sections (About, Menu, Gallery, Contact) |
-| `/about` | About — story, locations, stats |
-| `/menu` | Menu — categories and dishes |
-| `/gallery` | Gallery — photos and videos |
-| `/contact` | Contact — locations, form, social links |
+```bash
+npm install
+npm run dev      # → http://localhost:5173
+npm run build    # → dist/
+npm run preview  # serve production build
+npm run lint
+```
 
----
+**Demo gate:** Unlock via password in `PasswordGate` (`src/App.jsx`) before the site renders.
 
-## Design System
-
-Custom Tailwind tokens in `tailwind.config.js`:
-
-| Token | Role |
-|-------|------|
-| `jungle-*` | Deep greens and dark backgrounds (`jungle-950` base) |
-| `gold-*` | Primary accents, CTAs, highlights |
-| `earth-*` | Mobile menu and earthy gradients |
-
-Animations include fade-in, shimmer, leaf-sway, and glow effects.
+**Node:** 18+ recommended.
 
 ---
 
-## Assets
+## Assets (`public/`)
 
-Place media in `public/` so paths like `/hero.jpg` resolve correctly. Expected assets include:
+Vite serves `public/` at the site root. Required for full visuals:
 
-| File | Usage |
-|------|--------|
-| `hero.jpg` | Hero background |
-| `logo.png` | Navbar logo |
-| `logo2.png`, `logo3.jpg` | About and menu backgrounds |
-| `about.jpg` | About section imagery |
-| `gallery1.jpg` … `gallery4.jpg` | Gallery grid |
-| `video1.mp4` … `video5.mp4` | Founder, celebrity, and BTS videos |
+| Asset | Used by |
+|-------|---------|
+| `hero.jpg`, `logo.png` | Hero, navbar |
+| `logo2.png`, `logo3.jpg` | About / menu backgrounds |
+| `gallery1.jpg`–`gallery4.jpg` | Gallery grid |
+| `video1.mp4`–`video5.mp4` | Gallery video section |
+| Per-dish images (e.g. `chicken65.jpg`) | `menu.jsx` `DISHES[].image` |
 
-If assets are missing, sections will show empty or placeholder backgrounds until files are added.
-
----
-
-## Locations
-
-| City | Role |
-|------|------|
-| Warangal | Flagship |
-| Karimnagar | City of Heritage |
-| Hyderabad | The Capital |
-
-Contact details and map links are defined in `src/components/contact.jsx` and `src/components/bookingmodal.jsx`.
+Missing files → broken images or empty backgrounds; no build-time check.
 
 ---
 
-## Additional Documentation
+## Design tokens (Tailwind)
 
-- **`PROJECT_CONTEXT.md`** — Build notes, prompts, and setup history from development
+Defined in `tailwind.config.js`:
+
+| Scale | Purpose |
+|-------|---------|
+| `jungle-50` … `jungle-950` | Greens + dark UI (`950` = page base) |
+| `gold-300` … `gold-700` | CTAs, headings, borders |
+| `earth-600` … `earth-900` | Mobile menu / earthy gradients |
+
+Custom animations: `fade-in-down`, `fade-in-up`, `slide-in-right`, `shimmer`, `leaf-sway`, `glow`.
 
 ---
 
-## Author
+## Deployment notes
 
-**Pranith Konda** — Concept design and development
+- Output is a **static site** (`npm run build` → upload `dist/` to Netlify, Vercel, GitHub Pages, etc.).
+- Configure SPA fallback so all routes serve `index.html`.
+- Environment variables: none required today (no Supabase keys in use).
+
+---
+
+## Further reading
+
+- **`PROJECT_CONTEXT.md`** — iteration notes, prompts, Tailwind v3 vs v4 fixes during build
 
 ---
 
 ## License
 
-Private / client concept work. All rights reserved unless otherwise agreed with the client.
+Private client concept work. All rights reserved unless agreed otherwise with the client.
